@@ -18,3 +18,6 @@ def my_abort(error: dict, custom_message: str = '') -> Response:
     res = jsonify({"error": {"title": str(error.get('title','')), "message": msg}})
     res.status_code = error['code']
     return res
+
+def get_service_by_name(service_name):
+    pass
