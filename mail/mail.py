@@ -7,13 +7,13 @@ from definations import NewServiceRegister
 from db import session
 from models import UserServices
 
-logger = logging.getLogger("service.{}".format(__name__))
-service_bp = Blueprint('service_blueprint', __name__)
+logger = logging.getLogger("mail.{}".format(__name__))
+mail_bp = Blueprint('mail_blueprint', __name__)
 
 
-@service_bp.route('/add-service',methods=['POST'])
+@mail_bp.route('/send-mail',methods=['POST'])
 @token_required
-def add_mail_service(user_id: int):
+def send_mail_service(user_id: int):
     data: dict = request.get_json()
     if not data or not data.get('services'):
         return my_abort(MISSING_REQUIRED_PARAMETER)
@@ -35,13 +35,7 @@ def add_mail_service(user_id: int):
     return jsonify({'success':True})
     
 
-@service_bp.route('/update-service',methods=['POST'])
+@mail_bp.route('/mail-status/<id>',methods=['GET'])
 @token_required
-def update_user_mail_service(user_id):
-    pass
-
-
-@service_bp.route('/delete-service',methods=['GET'])
-@token_required
-def delete_user_mail_service(user_id):
+def mail_status(user_id: int, mail_id: int | None):
     pass

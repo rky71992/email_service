@@ -4,7 +4,7 @@ from definations import NewUser
 import utils
 from db import session
 from errors import MISSING_REQUIRED_PARAMETER, INVALID_PARAMETER
-from models import Users
+from models import Users, Services, UserServices
 from auth.authentication import token_required
 
 logger = logging.getLogger("user.{}".format(__name__))
@@ -37,6 +37,21 @@ def create_new_user():
 @token_required
 def get_user_details(user_id):
     user = session.query(Users).filter_by(id=user_id).one()
-    return jsonify(user.serialize())
+    data = user.serialize()
+    services: dict = {}
+    available_services: list = []
+    user_registered_services: list = []
+    master_services = session.query(Services).all()
+    for service in master_services:
+        available_services.append(service.service_name)
+    services['available_services'] = available_services
+
+    user_db_services = session.query(UserServices,Services).join(Services).filter(UserServices.user_id == user_id).all()
+    for user_service, service in user_db_services:
+        user_registered_services.append({'service_name':service.service_name, 'sender_email':user_service.sender_email})
+    services['registered_services'] = user_registered_services
+    
+    data['services'] = services
+    return jsonify(data)
 
 

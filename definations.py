@@ -12,21 +12,21 @@ class NewUser(pydantic.BaseModel):
     username: str
     password: str
 
-    @pydantic.validator("name")
+    @pydantic.field_validator("name")
     @classmethod
     def name_validator(cls, value) -> str:
         if not value.strip():
             raise ValueError
         return value.strip()
 
-    @pydantic.validator("username")
+    @pydantic.field_validator("username")
     @classmethod
     def username_validator(cls, value) -> str:
         if not value.strip():
             raise ValueError
         return value.strip()
     
-    @pydantic.validator("password")
+    @pydantic.field_validator("password")
     @classmethod
     def passwod_validator_hasher(cls, value) -> str:
         if not value.strip():
@@ -41,22 +41,22 @@ class NewServiceRegister(pydantic.BaseModel):
     service_name: str
     key: str
     sender_email: str
-    service_id: Optional(int)
+    #service_id: Optional(int)
 
-    @pydantic.validator("key")
+    @pydantic.field_validator("key")
     @classmethod
     def username_validator(cls, value) -> str:
         if not value.strip():
             raise ValueError
         return value.strip()
 
-    @pydantic.validator("sender_email")
+    @pydantic.field_validator("sender_email")
     @classmethod
     def recievers_validator(cls, value) -> str:
         email_info = validate_email(value, check_deliverability=False)
         return email_info.normalized
     
-    @pydantic.validator("service_name")
+    @pydantic.field_validator("service_name")
     @classmethod
     def service_name_validator(cls, value) -> str:
         if not value.strip():
