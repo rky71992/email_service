@@ -3,9 +3,10 @@ import logging
 from auth.authentication import token_required
 from utils import my_abort
 from errors import *
-from definations import NewServiceRegister
+import uuid
+from definations import NewServiceRegister, NewMailRequest, MailStatus
 from db import session
-from models import UserServices
+from models import UserServices, UserMail
 
 logger = logging.getLogger("mail.{}".format(__name__))
 mail_bp = Blueprint('mail_blueprint', __name__)
@@ -15,27 +16,36 @@ mail_bp = Blueprint('mail_blueprint', __name__)
 @token_required
 def send_mail_service(user_id: int):
     data: dict = request.get_json()
-    if not data or not data.get('services'):
+    try:
+        new_mail_data: NewMailRequest = NewMailRequest(**data)
+    except Exception as ex:
+        logger.exception(f'Not able to new mail request: {ex}')
         return my_abort(MISSING_REQUIRED_PARAMETER)
     
-    services: list[dict] = data['services']
-    validated_services: list[NewServiceRegister] = []
-    for service in services:
-        try:
-            service['user_id'] = user_id
-            new_service: NewServiceRegister = NewServiceRegister(**service)
-            validated_services.append(new_service)
-        except Exception as ex:
-            logger.exception(f'Not able to register new service: {ex}')
-            my_abort(INVALID_PARAMETER)
-
-    for service in validated_services:
-        session.add(UserServices(**service.model_dump()))
+    mail_db_data: dict = new_mail_data.model_dump()
+    unique_id = str(uuid.uuid4())
+    mail_db_data['mail_unique_id'] = unique_id
+    mail_db_data['user_id'] = user_id
+    mail_db_data['mail_status'] = MailStatus.QUEUED
+    session.add(UserMail(**mail_db_data))
     session.commit()
-    return jsonify({'success':True})
+
+    return jsonify({'status':MailStatus.QUEUED, 'id':unique_id})
+
     
 
-@mail_bp.route('/mail-status/<id>',methods=['GET'])
+@mail_bp.route('/mail-status',methods=['GET'])
 @token_required
-def mail_status(user_id: int, mail_id: int | None):
-    pass
+def mail_status(user_id: int):
+    mail_id_requested = request.args.get('mail_id')
+
+    query = session.query(UserMail).filter_by(user_id=user_id)
+    if mail_id_requested:
+        query = query.filter_by(mail_unique_id=mail_id_requested)
+    result = query.all()
+
+    mail_status_list: list = []
+    for mails in result:
+        mail_status_list.append(mails.serialize())
+        
+    return jsonify({'mail_status':mail_status_list})

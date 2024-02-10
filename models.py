@@ -1,4 +1,4 @@
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSON, ARRAY
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.sql import func
 
@@ -7,9 +7,6 @@ from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint, Column, \
     ForeignKey, text, ARRAY, JSON
 
 from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
 
 class CustomBase:
     """
@@ -90,5 +87,33 @@ class UserServices(Base):
         """Return dictionary of user resgistered services"""
         out = {}
         out['sender_email'] = str(self.sender_email)
+        return out
+    
+
+class UserMail(Base):
+    """
+    Model for the mail send by user.
+    """
+
+    __tablename__ = 'user_mail'
+    __table_args__ = (PrimaryKeyConstraint('id'),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    mail_unique_id = Column(String, nullable=False, comment='Unique of the mail')
+    user_id = Column(Integer, ForeignKey('users.id'), comment='User primary key')
+    mail_status = Column(String, nullable=False, comment='Status of the mail')
+    recievers = Column(ARRAY(String), nullable=False, comment='Recievers mail id list')
+    text = Column(String, nullable=False, comment='Body of the data to send')
+    subject = Column(String, nullable=False, comment='Subject of mail to send')
+
+    def serialize(self) -> dict:
+        """Return dictionary of user sent mails"""
+        out = {}
+        out['mail_id'] = self.mail_unique_id
+        out['mail_status'] = str(self.mail_status)
+        out['subject'] = self.subject
+        out['text'] = self.text
+        out['recievers'] = self.recievers
+        
         return out
     

@@ -6,6 +6,10 @@ from utils import get_service_by_name
 
 from config import UTF_8
 
+class MailStatus:
+    QUEUED = 'queued'
+    FAILED = 'failed'
+    SUCCESS = 'success'
 
 class NewUser(pydantic.BaseModel):
     name: str
@@ -69,3 +73,8 @@ class NewServiceRegister(pydantic.BaseModel):
     #@pydantic.property
 
     
+class NewMailRequest(pydantic.BaseModel):
+    text: str
+    subject: str
+    recievers: list
+
