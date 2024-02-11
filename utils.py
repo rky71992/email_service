@@ -1,5 +1,6 @@
 from flask import jsonify, Response
-
+from db import session
+from models import Services
 
 def my_abort(error: dict, custom_message: str = '') -> Response:
     """Abort and return an error code json response
@@ -20,4 +21,5 @@ def my_abort(error: dict, custom_message: str = '') -> Response:
     return res
 
 def get_service_by_name(service_name):
-    pass
+    service = session.query(Services).filter_by(service_name=service_name).one_or_none()
+    return service

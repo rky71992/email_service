@@ -6,7 +6,7 @@ from db import session
 from errors import MISSING_REQUIRED_PARAMETER, INVALID_PARAMETER
 from models import Users, Services, UserServices
 from auth.authentication import token_required
-from utils import my_abort
+from utils import my_abort, get_service_by_name
 
 logger = logging.getLogger("user.{}".format(__name__))
 user_bp = Blueprint('user_blueprint', __name__)
@@ -64,18 +64,24 @@ def add_mail_service(user_id: int):
         return my_abort(MISSING_REQUIRED_PARAMETER)
     
     services: list[dict] = data['services']
-    validated_services: list[NewServiceRegister] = []
+    validated_services: list[dict] = []
     for service in services:
         try:
             service['user_id'] = user_id
             new_service: NewServiceRegister = NewServiceRegister(**service)
-            validated_services.append(new_service)
+            service_db = get_service_by_name(new_service.service_name)
+            if not service_db:
+                raise ValueError('Service not supported')
+            values = new_service.model_dump()
+            values['service_id'] = service_db.id
+            del values['service_name']
+            validated_services.append(values)
         except Exception as ex:
             logger.exception(f'Not able to register new service: {ex}')
             my_abort(INVALID_PARAMETER)
 
     for service in validated_services:
-        session.add(UserServices(**service.model_dump()))
+        session.add(UserServices(**service))
     session.commit()
     return jsonify({'success':True})
     

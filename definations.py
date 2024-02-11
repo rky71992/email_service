@@ -40,12 +40,11 @@ class NewUser(pydantic.BaseModel):
         return hash_pwd.decode(UTF_8)
 
 
-class NewServiceRegister(pydantic.BaseModel):
+class   NewServiceRegister(pydantic.BaseModel):
     user_id: int
     service_name: str
     key: str
     sender_email: str
-    #service_id: Optional(int)
 
     @pydantic.field_validator("key")
     @classmethod
@@ -65,12 +64,7 @@ class NewServiceRegister(pydantic.BaseModel):
     def service_name_validator(cls, value) -> str:
         if not value.strip():
             raise ValueError
-        service_details = get_service_by_name(value)
-        if not service_details:
-            raise ValueError
-        #self.service_id = service_details.id
-    
-    #@pydantic.property
+        return value.strip()
 
     
 class NewMailRequest(pydantic.BaseModel):
